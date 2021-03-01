@@ -3,7 +3,7 @@ use crate::Hashable;
 use std::convert::TryInto;
 use std::fmt::{self, Debug, Formatter};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Hash(Vec<u8>);
 
 impl Hash {
@@ -69,6 +69,10 @@ impl Block {
             payload,
             difficulty,
         }
+    }
+
+    pub fn is_genesis(&self) -> bool {
+        self.index == 0
     }
 
     pub fn gen_hash(&self) -> Hash {

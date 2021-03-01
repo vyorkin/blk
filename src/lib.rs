@@ -1,7 +1,7 @@
 pub mod block;
 mod timestamp;
 mod hashable;
-mod blockchain;
+pub mod blockchain;
 
 pub use block::Block;
 pub use blockchain::Blockchain;

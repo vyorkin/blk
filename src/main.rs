@@ -1,6 +1,6 @@
-use blk::{block, Block, Blockchain};
+use blk::{block, blockchain, Block, Blockchain, Timestamp};
 
-fn main() {
+fn main() -> Result<(), blockchain::ValidationError> {
     let difficulty = 0x0000FFFFFFFFFFFFFFFFFFFFFFFFFFFF;
     let mut block = Block::new(
         0,
@@ -19,10 +19,11 @@ fn main() {
         blocks: vec![block],
     };
     for i in 1..=10 {
-        let mut block = Block::new(i, 0, parent_hash.clone(), 0, format!("block #{}", i), difficulty);
+        let mut block = Block::new(i, Timestamp::now(), parent_hash.clone(), 0, format!("block #{}", i), difficulty);
         block.mine();
         println!("{:?}", &block);
         parent_hash = block.hash.clone();
         blockchain.blocks.push(block);
     }
+    blockchain.validate()
 }
