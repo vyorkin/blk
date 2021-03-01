@@ -20,9 +20,10 @@ impl Hash {
         self.0.clone()
     }
 
-    pub fn to_u128(&self) -> u128 {
-        let last16 = &self.to_bytes()[16..];
-        u128::from_be_bytes(last16.try_into().unwrap())
+    pub fn check_difficulty(&self, difficulty: u128) -> bool {
+        let last16 = &self.to_bytes()[0..16];
+        let number = u128::from_be_bytes(last16.try_into().unwrap());
+        number < difficulty
     }
 }
 
@@ -33,23 +34,32 @@ pub struct Block {
     pub prev_block_hash: Hash,
     pub nonce: u64,
     pub payload: String,
+    pub difficulty: u128,
 }
 
 impl Debug for Block {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(
             f,
-            "Block[{}]: {} at: {} with: {}",
+            "Block[{}]: {} at: {} with: {} nonce: {}",
             &self.index,
             hex::encode(&self.hash.to_bytes()),
             &self.timestamp.0,
             &self.payload,
+            &self.nonce,
         )
     }
 }
 
 impl Block {
-    pub fn new(index: u32, ts: u128, prev_block_hash: Hash, nonce: u64, payload: &str) -> Self {
+    pub fn new(
+        index: u32,
+        ts: u128,
+        prev_block_hash: Hash,
+        nonce: u64,
+        payload: &str,
+        difficulty: u128,
+    ) -> Self {
         Block {
             index,
             timestamp: Timestamp(ts),
@@ -57,6 +67,22 @@ impl Block {
             prev_block_hash,
             nonce,
             payload: String::from(payload),
+            difficulty,
+        }
+    }
+
+    pub fn gen_hash(&self) -> Hash {
+        Hash::from(self.hash())
+    }
+
+    pub fn mine(&mut self) {
+        for nonce_attempt in 0..u64::MAX {
+            self.nonce = nonce_attempt;
+            let hash = self.gen_hash();
+            if hash.check_difficulty(self.difficulty) {
+                self.hash = hash;
+                break;
+            }
         }
     }
 }
@@ -69,10 +95,7 @@ impl Hashable for Block {
         bytes.extend(&self.prev_block_hash.to_bytes());
         bytes.extend(&self.nonce.to_be_bytes());
         bytes.extend(self.payload.as_bytes());
+        bytes.extend(&self.difficulty.to_be_bytes());
         bytes
     }
-}
-
-pub fn check_difficulty(hash: &Hash, difficulty: u128) -> bool {
-    hash.to_u128() < difficulty
 }
