@@ -1,8 +1,8 @@
 use blk::{block, Block, Hashable};
 
 fn main() {
-    let block = Block::new(0, 0, block::Hash::from(vec![0; 32]), 0, "Genesis block");
+    let mut block = Block::new(0, 0, block::Hash::from(vec![0; 32]), 0, "Genesis block");
     println!("{:?}", block);
-    let hash = block.hash();
-    println!("{:?}", &hash);
+    block.hash = block::Hash::from(block.hash());
+    println!("{:?}", &block);
 }
