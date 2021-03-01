@@ -1,5 +1,6 @@
 use crate::timestamp::Timestamp;
 use crate::Hashable;
+use std::convert::TryInto;
 use std::fmt::{self, Debug, Formatter};
 
 #[derive(Debug)]
@@ -7,6 +8,7 @@ pub struct Hash(Vec<u8>);
 
 impl Hash {
     pub fn from(bytes: Vec<u8>) -> Self {
+        assert_eq!(bytes.len(), 32);
         Hash(bytes)
     }
 
@@ -16,6 +18,11 @@ impl Hash {
 
     pub fn to_bytes(&self) -> Vec<u8> {
         self.0.clone()
+    }
+
+    pub fn to_u128(&self) -> u128 {
+        let last16 = &self.to_bytes()[16..];
+        u128::from_be_bytes(last16.try_into().unwrap())
     }
 }
 
@@ -64,4 +71,8 @@ impl Hashable for Block {
         bytes.extend(self.payload.as_bytes());
         bytes
     }
+}
+
+pub fn check_difficulty(hash: &Hash, difficulty: u128) -> bool {
+    hash.to_u128() < difficulty
 }
