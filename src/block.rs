@@ -3,7 +3,7 @@ use crate::Hashable;
 use std::convert::TryInto;
 use std::fmt::{self, Debug, Formatter};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Hash(Vec<u8>);
 
 impl Hash {
@@ -31,7 +31,7 @@ pub struct Block {
     pub index: u32,
     pub timestamp: Timestamp,
     pub hash: Hash,
-    pub prev_block_hash: Hash,
+    pub parent_hash: Hash,
     pub nonce: u64,
     pub payload: String,
     pub difficulty: u128,
@@ -55,18 +55,18 @@ impl Block {
     pub fn new(
         index: u32,
         ts: u128,
-        prev_block_hash: Hash,
+        parent_hash: Hash,
         nonce: u64,
-        payload: &str,
+        payload: String,
         difficulty: u128,
     ) -> Self {
         Block {
             index,
             timestamp: Timestamp(ts),
             hash: Hash::new(),
-            prev_block_hash,
+            parent_hash,
             nonce,
-            payload: String::from(payload),
+            payload,
             difficulty,
         }
     }
@@ -92,7 +92,7 @@ impl Hashable for Block {
         let mut bytes = vec![];
         bytes.extend(&self.index.to_be_bytes());
         bytes.extend(&self.timestamp.0.to_be_bytes());
-        bytes.extend(&self.prev_block_hash.to_bytes());
+        bytes.extend(&self.parent_hash.to_bytes());
         bytes.extend(&self.nonce.to_be_bytes());
         bytes.extend(self.payload.as_bytes());
         bytes.extend(&self.difficulty.to_be_bytes());
