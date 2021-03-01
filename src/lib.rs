@@ -1,9 +1,7 @@
-mod block;
+pub mod block;
 mod timestamp;
+mod hashable;
 
 pub use block::Block;
 pub use timestamp::Timestamp;
-
-type Hash = Vec<u8>;
-
-type Address = String;
+pub use hashable::Hashable;

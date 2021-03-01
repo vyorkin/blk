@@ -1,6 +1,23 @@
 use crate::timestamp::Timestamp;
-use crate::Hash;
+use crate::Hashable;
 use std::fmt::{self, Debug, Formatter};
+
+#[derive(Debug)]
+pub struct Hash(Vec<u8>);
+
+impl Hash {
+    pub fn from(bytes: Vec<u8>) -> Self {
+        Hash(bytes)
+    }
+
+    pub fn new() -> Self {
+        Hash(vec![0; 32])
+    }
+
+    pub fn to_bytes(&self) -> Vec<u8> {
+        self.0.clone()
+    }
+}
 
 pub struct Block {
     pub index: u32,
@@ -13,11 +30,13 @@ pub struct Block {
 
 impl Debug for Block {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(f, "Block[{}]: {} at: {} with: {}",
-               &self.index,
-               hex::encode(&self.hash),
-               &self.timestamp.0,
-               &self.payload,
+        write!(
+            f,
+            "Block[{}]: {} at: {} with: {}",
+            &self.index,
+            hex::encode(&self.hash.to_bytes()),
+            &self.timestamp.0,
+            &self.payload,
         )
     }
 }
@@ -27,10 +46,22 @@ impl Block {
         Block {
             index,
             timestamp: Timestamp(ts),
-            hash: vec![0; 32],
+            hash: Hash::new(),
             prev_block_hash,
             nonce,
             payload: String::from(payload),
         }
+    }
+}
+
+impl Hashable for Block {
+    fn bytes(&self) -> Vec<u8> {
+        let mut bytes = vec![];
+        bytes.extend(&self.index.to_be_bytes());
+        bytes.extend(&self.timestamp.0.to_be_bytes());
+        bytes.extend(&self.prev_block_hash.to_bytes());
+        bytes.extend(&self.nonce.to_be_bytes());
+        bytes.extend(self.payload.as_bytes());
+        bytes
     }
 }
