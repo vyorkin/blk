@@ -1,4 +1,4 @@
-use crate::{block, Block};
+use crate::Block;
 
 #[derive(Debug)]
 pub enum ValidationError {
@@ -25,7 +25,7 @@ impl Blockchain {
         if block.index != ix {
             return Err(ValidationError::IndexMismatch);
         }
-        if !block.hash.check_difficulty(block.difficulty) {
+        if !block.check_difficulty(&block.hash) {
             return Err(ValidationError::InvalidHash);
         }
 

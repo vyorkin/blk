@@ -1,37 +1,14 @@
-use crate::timestamp::Timestamp;
-use crate::Hashable;
-use std::convert::TryInto;
-use std::fmt::{self, Debug, Formatter};
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Hash(Vec<u8>);
-
-impl Hash {
-    pub fn from(bytes: Vec<u8>) -> Self {
-        assert_eq!(bytes.len(), 32);
-        Hash(bytes)
-    }
-
-    pub fn new() -> Self {
-        Hash(vec![0; 32])
-    }
-
-    pub fn to_bytes(&self) -> Vec<u8> {
-        self.0.clone()
-    }
-
-    pub fn check_difficulty(&self, difficulty: u128) -> bool {
-        let last16 = &self.to_bytes()[0..16];
-        let number = u128::from_be_bytes(last16.try_into().unwrap());
-        number < difficulty
-    }
-}
+use crate::{ByteHash, Hashable, Timestamp};
+use std::{
+    convert::TryInto,
+    fmt::{self, Debug, Formatter},
+};
 
 pub struct Block {
     pub index: u32,
     pub timestamp: Timestamp,
-    pub hash: Hash,
-    pub parent_hash: Hash,
+    pub hash: ByteHash,
+    pub parent_hash: ByteHash,
     pub nonce: u64,
     pub payload: String,
     pub difficulty: u128,
@@ -55,7 +32,7 @@ impl Block {
     pub fn new(
         index: u32,
         ts: u128,
-        parent_hash: Hash,
+        parent_hash: ByteHash,
         nonce: u64,
         payload: String,
         difficulty: u128,
@@ -63,7 +40,7 @@ impl Block {
         Block {
             index,
             timestamp: Timestamp(ts),
-            hash: Hash::new(),
+            hash: ByteHash::new(),
             parent_hash,
             nonce,
             payload,
@@ -75,19 +52,21 @@ impl Block {
         self.index == 0
     }
 
-    pub fn gen_hash(&self) -> Hash {
-        Hash::from(self.hash())
-    }
-
     pub fn mine(&mut self) {
         for nonce_attempt in 0..u64::MAX {
             self.nonce = nonce_attempt;
-            let hash = self.gen_hash();
-            if hash.check_difficulty(self.difficulty) {
+            let hash = self.hash();
+            if self.check_difficulty(&hash) {
                 self.hash = hash;
                 break;
             }
         }
+    }
+
+    pub fn check_difficulty(&self, hash: &ByteHash) -> bool {
+        let last16 = &hash.to_bytes()[0..16];
+        let number = u128::from_be_bytes(last16.try_into().unwrap());
+        number < self.difficulty
     }
 }
 
